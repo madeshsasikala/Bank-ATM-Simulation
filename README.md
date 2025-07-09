@@ -1,4 +1,4 @@
-java concurrency based project
+Java concurrency based project
 Title:
 "Multi-User Bank ATM Simulation using Java Concurrency"
 
