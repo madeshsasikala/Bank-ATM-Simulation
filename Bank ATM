@@ -1,0 +1,50 @@
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
+
+public class ATMProject {
+    static int balance = 1000; // shared bank balance
+    static Lock lock = new ReentrantLock(); // to make balance update safe
+    static Semaphore atmMachines = new Semaphore(2); // only 2 users can access ATM at a time
+
+    public static void main(String[] args) {
+        ExecutorService executor = Executors.newFixedThreadPool(5); // 5 users
+
+        for (int i = 1; i <= 5; i++) {
+            int userId = i;
+            executor.submit(() -> {
+                try { 
+                    System.out.println("User " + userId + " is waiting for ATM...");
+                    atmMachines.acquire(); // wait for ATM machine
+                    System.out.println("User " + userId + " is using the ATM");
+
+                    withdraw(userId, 300); // try to withdraw Rs.300
+
+                    Thread.sleep(2000); // simulate ATM processing time
+
+                    System.out.println("User " + userId + " is done using ATM");
+                    atmMachines.release(); // release ATM machine
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        executor.shutdown();
+    }
+
+    // method to safely withdraw amount
+    static void withdraw(int userId, int amount) {
+        lock.lock();
+        try {
+            if (balance >= amount) {
+                System.out.println("User " + userId + " withdrew Rs." + amount);
+                balance -= amount;
+            } else {
+                System.out.println("User " + userId + ": Insufficient balance!");
+            }
+            System.out.println("Balance remaining: Rs." + balance);
+        } finally {
+            lock.unlock();
+        }
+    }
+}
